@@ -128,7 +128,7 @@ class TestKafkaTopics {
     final KafkaTopic topic = new KafkaTopic();
 
     topic.setMetadata(new ObjectMetaBuilder().withName(name).withNamespace(namespace).build());
-    topic.setSpec(spec.withName(name).withPartitions(1).withReplicationFactor(1));
+    topic.setSpec(spec.withPartitions(1));
 
     return topic;
   }

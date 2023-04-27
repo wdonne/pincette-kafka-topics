@@ -24,8 +24,6 @@ spec:
               properties:
                 maxMessageBytes:
                   type: integer
-                name:
-                  type: string
                 partitions:
                   type: integer
                 replicationFactor:
@@ -34,8 +32,6 @@ spec:
                   type: integer
                 retentionMilliseconds:
                   type: integer
-              required:
-                - name
               type: object
             status:
               properties:
@@ -132,6 +128,7 @@ spec:
       containers:
         - name: kafka-topics-controller
           image: wdonne/pincette-kafka-topics:latest
+          imagePullPolicy: Always
           resources: { }
           volumeMounts:
             - mountPath: /conf

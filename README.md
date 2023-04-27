@@ -10,13 +10,8 @@ metadata:
   namespace: test-kafka-topics
 spec:
   maxMessageBytes: 1000000
-  name: test-topic
   partitions: 1
   replicationFactor: 1
-  retentionBytes: -1
-  retentionMilliseconds: -1
-status:
-  phase: Ready
 ```
 
 The only mandatory field is `name`. Defaults are defined at the level of the Kafka cluster.
@@ -31,7 +26,6 @@ metadata:
   namespace: test-kafka-topics
 spec:
   maxMessageBytes: 1000000
-  name: test-topic
   partitions: 1
   replicationFactor: 1
   retentionBytes: -1
@@ -60,6 +54,8 @@ metadata:
 data:
   application.conf: |
     bootstrap.servers = "localhost:9092"
+    defaultPartitions = 4
+    defaultReplicationFactor = 3    
 ```
 
-The syntax is [Lightbend Config](https://github.com/lightbend/config). You may add other Kafka properties to it. If there would be secrets in those properties, then you should kustomize the `Deployment` resource to mount a secret instead. You could also mount both and use an `include` statement to include the secret in the config, for example.
+The syntax is [Lightbend Config](https://github.com/lightbend/config). You may add other Kafka properties to it. If there would be secrets in those properties, then you should kustomize the `Deployment` resource to mount a secret instead. You could also mount both and use an `include` statement to include the secret in the config, for example. The fields `defaultPartitions` and `defaultReplicationFactor` are optional.

@@ -53,6 +53,8 @@ import org.apache.kafka.common.config.ConfigResource;
 @GradualRetry(maxAttempts = MAX_VALUE)
 public class KafkaTopicReconciler
     implements Reconciler<KafkaTopic>, EventSourceInitializer<KafkaTopic> {
+  private static final String DEFAULT_PARTITIONS = "defaultPartitions";
+  private static final String DEFAULT_REPLICATION_FACTOR = "defaultReplicationFactor";
   private static final Logger LOGGER = getLogger("net.pincette.topics");
   static final String MAX_MESSAGE_BYTES = "max.message.bytes";
   private static final String RETENTION_BYTES = "retention.bytes";
@@ -74,17 +76,35 @@ public class KafkaTopicReconciler
   }
 
   private static CompletionStage<KafkaTopicSpec> createTopic(
-      final KafkaTopicSpec spec, final Admin admin) {
-    LOGGER.info(() -> "Create topic " + spec.name);
+      final String name,
+      final KafkaTopicSpec spec,
+      final Admin admin,
+      final Map<String, Object> config) {
+    LOGGER.info(() -> "Create topic " + name);
 
     return admin
         .createTopics(
             set(
-                new NewTopic(spec.name, spec.partitions, (short) spec.replicationFactor)
+                new NewTopic(
+                        name,
+                        defaultValue(spec.partitions, config, DEFAULT_PARTITIONS),
+                        (short)
+                            defaultValue(
+                                spec.replicationFactor, config, DEFAULT_REPLICATION_FACTOR))
                     .configs(properties(spec))))
         .all()
         .toCompletionStage()
         .thenApply(r -> spec);
+  }
+
+  private static int defaultValue(
+      final int value, final Map<String, Object> config, final String field) {
+    return value != -1
+        ? value
+        : ofNullable(config.get(field))
+            .filter(Integer.class::isInstance)
+            .map(Integer.class::cast)
+            .orElse(-1);
   }
 
   private static Map<String, Object> getConfig() {
@@ -103,12 +123,12 @@ public class KafkaTopicReconciler
                 description.map(
                     d ->
                         new KafkaTopicSpec()
-                            .withName(name)
                             .withPartitions(d.partitions().size())
                             .withReplicationFactor(
                                 (short) d.partitions().get(0).replicas().size())))
         .thenComposeAsync(
-            spec -> spec.map(s -> properties(s, admin)).orElseGet(() -> completedFuture(null)))
+            spec ->
+                spec.map(s -> properties(name, s, admin)).orElseGet(() -> completedFuture(null)))
         .thenApply(Optional::of)
         .exceptionally(e -> empty());
   }
@@ -132,8 +152,8 @@ public class KafkaTopicReconciler
   }
 
   private static CompletionStage<KafkaTopicSpec> properties(
-      final KafkaTopicSpec spec, final Admin admin) {
-    final ConfigResource key = new ConfigResource(TOPIC, spec.name);
+      final String name, final KafkaTopicSpec spec, final Admin admin) {
+    final ConfigResource key = new ConfigResource(TOPIC, name);
 
     return admin
         .describeConfigs(set(key))
@@ -159,13 +179,20 @@ public class KafkaTopicReconciler
   }
 
   private static CompletionStage<KafkaTopicSpec> reconcile(
-      final KafkaTopicSpec spec, final Admin admin) {
-    return getTopic(spec.name, admin)
+      final String name,
+      final KafkaTopicSpec spec,
+      final Admin admin,
+      final Map<String, Object> config) {
+    return getTopic(name, admin)
         .thenComposeAsync(
             topic ->
                 topic
-                    .map(t -> anyChanged(t, spec) ? updateTopic(spec, admin) : completedFuture(t))
-                    .orElseGet(() -> createTopic(spec, admin)));
+                    .map(
+                        t ->
+                            anyChanged(t, spec)
+                                ? updateTopic(name, spec, admin)
+                                : completedFuture(t))
+                    .orElseGet(() -> createTopic(name, spec, admin, config)));
   }
 
   private static KafkaTopicSpec setProperties(
@@ -187,12 +214,11 @@ public class KafkaTopicReconciler
   }
 
   private static CompletionStage<KafkaTopicSpec> updateTopic(
-      final KafkaTopicSpec spec, final Admin admin) {
-    LOGGER.info(() -> "Update topic " + spec.name);
+      final String name, final KafkaTopicSpec spec, final Admin admin) {
+    LOGGER.info(() -> "Update topic " + name);
 
     return admin
-        .incrementalAlterConfigs(
-            map(pair(new ConfigResource(TOPIC, spec.name), alterConfigs(spec))))
+        .incrementalAlterConfigs(map(pair(new ConfigResource(TOPIC, name), alterConfigs(spec))))
         .all()
         .toCompletionStage()
         .thenApply(r -> spec);
@@ -215,11 +241,13 @@ public class KafkaTopicReconciler
 
   public UpdateControl<KafkaTopic> reconcile(
       final KafkaTopic resource, final Context<KafkaTopic> context) {
+    final Map<String, Object> config = getConfig();
+
     return tryToGetWith(
-            () -> create(getConfig()),
+            () -> create(config),
             admin ->
-                reconcile(resource.getSpec(), admin)
-                    .thenComposeAsync(spec -> messageLag(spec.name, admin))
+                reconcile(resource.getMetadata().getName(), resource.getSpec(), admin, config)
+                    .thenComposeAsync(spec -> messageLag(resource.getMetadata().getName(), admin))
                     .thenApply(
                         messageLag -> {
                           timerEventSource.scheduleOnce(resource, 60000);
