@@ -24,6 +24,8 @@ spec:
               properties:
                 maxMessageBytes:
                   type: integer
+                name:
+                  type: string
                 partitions:
                   type: integer
                 replicationFactor:

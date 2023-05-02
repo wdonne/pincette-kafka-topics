@@ -15,8 +15,10 @@ import static java.util.stream.Collectors.toMap;
 import static net.pincette.jes.util.Configuration.loadDefault;
 import static net.pincette.jes.util.Kafka.adminConfig;
 import static net.pincette.jes.util.Kafka.fromConfig;
+import static net.pincette.util.Collections.filterMap;
 import static net.pincette.util.Collections.list;
 import static net.pincette.util.Collections.map;
+import static net.pincette.util.Collections.merge;
 import static net.pincette.util.Collections.set;
 import static net.pincette.util.Pair.pair;
 import static net.pincette.util.StreamUtil.concat;
@@ -70,9 +72,10 @@ public class KafkaTopicReconciler
   }
 
   private static boolean anyChanged(final KafkaTopicSpec oldSpec, final KafkaTopicSpec newSpec) {
-    return oldSpec.maxMessageBytes != newSpec.maxMessageBytes
-        || oldSpec.retentionBytes != newSpec.retentionBytes
-        || oldSpec.retentionMilliseconds != newSpec.retentionMilliseconds;
+    return (newSpec.maxMessageBytes != -1 && oldSpec.maxMessageBytes != newSpec.maxMessageBytes)
+        || (newSpec.retentionBytes != -1 && oldSpec.retentionBytes != newSpec.retentionBytes)
+        || (newSpec.retentionMilliseconds != -1
+            && oldSpec.retentionMilliseconds != newSpec.retentionMilliseconds);
   }
 
   private static CompletionStage<KafkaTopicSpec> createTopic(
@@ -107,8 +110,17 @@ public class KafkaTopicReconciler
             .orElse(-1);
   }
 
+  private static Map<String, Object> defaultsConfig(final Map<String, Object> config) {
+    return filterMap(
+        config,
+        e ->
+            DEFAULT_PARTITIONS.equals(e.getKey()) || DEFAULT_REPLICATION_FACTOR.equals(e.getKey()));
+  }
+
   private static Map<String, Object> getConfig() {
-    return adminConfig(fromConfig(defaultOverrides().withFallback(loadDefault())));
+    final Map<String, Object> config = fromConfig(defaultOverrides().withFallback(loadDefault()));
+
+    return merge(adminConfig(config), defaultsConfig(config));
   }
 
   private static CompletionStage<Optional<KafkaTopicSpec>> getTopic(
@@ -144,6 +156,10 @@ public class KafkaTopicReconciler
             map ->
                 map.entrySet().stream()
                     .collect(toMap(Entry::getKey, e -> partitionsAsStrings(e.getValue()))));
+  }
+
+  private static String name(final KafkaTopic resource) {
+    return ofNullable(resource.getSpec().name).orElseGet(() -> resource.getMetadata().getName());
   }
 
   private static Map<String, Long> partitionsAsStrings(final Map<TopicPartition, Long> lags) {
@@ -242,12 +258,13 @@ public class KafkaTopicReconciler
   public UpdateControl<KafkaTopic> reconcile(
       final KafkaTopic resource, final Context<KafkaTopic> context) {
     final Map<String, Object> config = getConfig();
+    final String name = name(resource);
 
     return tryToGetWith(
             () -> create(config),
             admin ->
-                reconcile(resource.getMetadata().getName(), resource.getSpec(), admin, config)
-                    .thenComposeAsync(spec -> messageLag(resource.getMetadata().getName(), admin))
+                reconcile(name, resource.getSpec(), admin, config)
+                    .thenComposeAsync(spec -> messageLag(name, admin))
                     .thenApply(
                         messageLag -> {
                           timerEventSource.scheduleOnce(resource, 60000);

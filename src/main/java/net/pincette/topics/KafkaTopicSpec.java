@@ -7,6 +7,9 @@ public class KafkaTopicSpec {
   @JsonProperty("maxMessageBytes")
   public final int maxMessageBytes;
 
+  @JsonProperty("name")
+  public final String name;
+
   @JsonProperty("partitions")
   public final int partitions;
 
@@ -21,15 +24,17 @@ public class KafkaTopicSpec {
 
   @JsonCreator
   public KafkaTopicSpec() {
-    this(-1, -1, -1, -1, -1);
+    this(null, -1, -1, -1, -1, -1);
   }
 
   private KafkaTopicSpec(
+      final String name,
       final int maxMessageBytes,
       final int partitions,
       final int replicationFactor,
       final int retentionBytes,
       final int retentionMilliseconds) {
+    this.name = name;
     this.maxMessageBytes = maxMessageBytes;
     this.partitions = partitions;
     this.replicationFactor = replicationFactor;
@@ -39,26 +44,61 @@ public class KafkaTopicSpec {
 
   KafkaTopicSpec withMaxMessageBytes(final int maxMessageBytes) {
     return new KafkaTopicSpec(
-        maxMessageBytes, partitions, replicationFactor, retentionBytes, retentionMilliseconds);
+        name,
+        maxMessageBytes,
+        partitions,
+        replicationFactor,
+        retentionBytes,
+        retentionMilliseconds);
+  }
+
+  KafkaTopicSpec withName(final String name) {
+    return new KafkaTopicSpec(
+        name,
+        maxMessageBytes,
+        partitions,
+        replicationFactor,
+        retentionBytes,
+        retentionMilliseconds);
   }
 
   KafkaTopicSpec withPartitions(final int partitions) {
     return new KafkaTopicSpec(
-        maxMessageBytes, partitions, replicationFactor, retentionBytes, retentionMilliseconds);
+        name,
+        maxMessageBytes,
+        partitions,
+        replicationFactor,
+        retentionBytes,
+        retentionMilliseconds);
   }
 
   KafkaTopicSpec withReplicationFactor(final int replicationFactor) {
     return new KafkaTopicSpec(
-        maxMessageBytes, partitions, replicationFactor, retentionBytes, retentionMilliseconds);
+        name,
+        maxMessageBytes,
+        partitions,
+        replicationFactor,
+        retentionBytes,
+        retentionMilliseconds);
   }
 
   KafkaTopicSpec withRetentionBytes(final int retentionBytes) {
     return new KafkaTopicSpec(
-        maxMessageBytes, partitions, replicationFactor, retentionBytes, retentionMilliseconds);
+        name,
+        maxMessageBytes,
+        partitions,
+        replicationFactor,
+        retentionBytes,
+        retentionMilliseconds);
   }
 
   KafkaTopicSpec withRetentionMilliseconds(final int retentionMilliseconds) {
     return new KafkaTopicSpec(
-        maxMessageBytes, partitions, replicationFactor, retentionBytes, retentionMilliseconds);
+        name,
+        maxMessageBytes,
+        partitions,
+        replicationFactor,
+        retentionBytes,
+        retentionMilliseconds);
   }
 }
