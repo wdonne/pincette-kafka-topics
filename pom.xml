@@ -161,11 +161,7 @@
             <workingDirectory>/</workingDirectory>
             <jvmFlags>
               <jvmFlag>-Dconfig.file=/conf/application.conf</jvmFlag>
-              <jvmFlag>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8000</jvmFlag>
             </jvmFlags>
-            <ports>
-              <port>8000</port>
-            </ports>
           </container>
         </configuration>
       </plugin>

@@ -14,7 +14,7 @@ spec:
   replicationFactor: 1
 ```
 
-The only mandatory field is `name`. Defaults are defined at the level of the Kafka cluster.
+The field `name` is optional. You can use it when the topic name doesn't comply with the restrictions for `metadata.name`. Defaults are defined at the level of the Kafka clusteri and with the configuration fields `defaultPartitions` and `defaultReplicationFactor`.
 
 The `status` field may also contain the field `messageLag`. It is updated every minute. The keys in the field are the Kafka consumer groups that consume the topic. The values are objects that contain the message lag for each topic partition if there is any.
 
