@@ -229,6 +229,10 @@ public class KafkaTopicReconciler
     }
   }
 
+  private static KafkaTopicStatus status(final KafkaTopic resource) {
+    return ofNullable(resource.getStatus()).orElseGet(KafkaTopicStatus::new);
+  }
+
   private static CompletionStage<KafkaTopicSpec> updateTopic(
       final String name, final KafkaTopicSpec spec, final Admin admin) {
     LOGGER.info(() -> "Update topic " + name);
@@ -243,7 +247,7 @@ public class KafkaTopicReconciler
   private UpdateControl<KafkaTopic> error(final KafkaTopic resource, final Throwable t) {
     LOGGER.log(SEVERE, t, t::getMessage);
     timerEventSource.scheduleOnce(resource, 5000);
-    resource.setStatus(new KafkaTopicStatus(t.getMessage()));
+    resource.setStatus((KafkaTopicStatus) status(resource).withException(t));
 
     return patchStatus(resource);
   }
@@ -268,7 +272,7 @@ public class KafkaTopicReconciler
                     .thenApply(
                         messageLag -> {
                           timerEventSource.scheduleOnce(resource, 60000);
-                          resource.setStatus(new KafkaTopicStatus(messageLag));
+                          resource.setStatus(status(resource).withMessageLag(messageLag));
 
                           return patchStatus(resource);
                         })

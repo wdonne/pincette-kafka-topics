@@ -16,7 +16,14 @@ spec:
     singular: kafkatopic
   scope: Namespaced
   versions:
-    - name: v1
+    - additionalPrinterColumns:
+        - jsonPath: .status.health.status
+          name: Health
+          type: string
+        - jsonPath: .status.phase
+          name: Phase
+          type: string
+      name: v1
       schema:
         openAPIV3Schema:
           properties:
@@ -37,21 +44,34 @@ spec:
               type: object
             status:
               properties:
-                error:
-                  type: string
                 messageLag:
                   additionalProperties:
                     additionalProperties:
                       type: integer
                     type: object
                   type: object
+                conditions:
+                  items:
+                    properties:
+                      lastTransitionTime:
+                        type: string
+                      message:
+                        type: string
+                      reason:
+                        type: string
+                      status:
+                        type: string
+                      type:
+                        type: string
+                    type: object
+                  type: array
+                health:
+                  properties:
+                    status:
+                      type: string
+                  type: object
                 phase:
-                  enum:
-                    - Pending
-                    - Ready
                   type: string
-              required:
-                - phase
               type: object
           type: object
       served: true

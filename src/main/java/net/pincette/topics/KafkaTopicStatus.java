@@ -1,41 +1,17 @@
 package net.pincette.topics;
 
-import static net.pincette.topics.Phase.Pending;
-import static net.pincette.topics.Phase.Ready;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.fabric8.generator.annotation.Required;
 import java.util.Map;
+import net.pincette.operator.util.Status;
 
-public class KafkaTopicStatus {
-  @JsonProperty("error")
-  public final String error;
-
+public class KafkaTopicStatus extends Status {
   @JsonProperty("messageLag")
-  public final Map<String, Map<String, Long>> messageLag;
+  public Map<String, Map<String, Long>> messageLag;
 
-  @JsonProperty("phase")
-  @Required
-  public final Phase phase;
-
-  @JsonCreator
-  public KafkaTopicStatus() {
-    this(Ready, null, null);
-  }
-
-  KafkaTopicStatus(final Map<String, Map<String, Long>> messageLag) {
-    this(Ready, messageLag, null);
-  }
-
-  KafkaTopicStatus(final String error) {
-    this(Pending, null, error);
-  }
-
-  private KafkaTopicStatus(
-      final Phase phase, final Map<String, Map<String, Long>> messageLag, final String error) {
-    this.phase = phase;
+  KafkaTopicStatus withMessageLag(final Map<String, Map<String, Long>> messageLag) {
     this.messageLag = messageLag;
-    this.error = error;
+
+    return this;
   }
 }
