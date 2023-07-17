@@ -43,6 +43,7 @@ import java.util.concurrent.CompletionStage;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 import net.pincette.jes.util.Kafka;
+import net.pincette.operator.util.Status.Condition;
 import org.apache.kafka.clients.admin.Admin;
 import org.apache.kafka.clients.admin.AlterConfigOp;
 import org.apache.kafka.clients.admin.Config;
@@ -247,7 +248,7 @@ public class KafkaTopicReconciler
   private UpdateControl<KafkaTopic> error(final KafkaTopic resource, final Throwable t) {
     LOGGER.log(SEVERE, t, t::getMessage);
     timerEventSource.scheduleOnce(resource, 5000);
-    resource.setStatus((KafkaTopicStatus) status(resource).withException(t));
+    resource.setStatus(status(resource).withException(t));
 
     return patchStatus(resource);
   }
