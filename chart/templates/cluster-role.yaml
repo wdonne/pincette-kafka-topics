@@ -1,0 +1,30 @@
+{{- if not .Values.watchNamespaces }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kafka-topics-controller
+  labels:
+    app.kubernetes.io/component: kafka-topics-controller
+    app.kubernetes.io/name: kafka-topics-controller
+rules:
+  - apiGroups:
+      - pincette.net
+    resources:
+      - kafkatopics
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - pincette.net
+    resources:
+      - kafkatopics/status
+    verbs:
+      - patch
+      - update
+{{- end }}

@@ -4,7 +4,7 @@ import static java.util.Collections.emptyMap;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.fabric8.kubernetes.model.annotation.PrinterColumn;
+import io.fabric8.crd.generator.annotation.PrinterColumn;
 import java.util.List;
 import java.util.Map;
 import net.pincette.operator.util.Status;

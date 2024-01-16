@@ -1,0 +1,20 @@
+{{- $namespace := .Release.Namespace -}}
+{{- range .Values.watchNamespaces }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: kafka-topics-controller
+  namespace: {{ . }}
+  labels:
+    app.kubernetes.io/component: kafka-topics-controller
+    app.kubernetes.io/name: kafka-topics-controller
+subjects:
+  - kind: ServiceAccount
+    name: kafka-topics-controller
+    namespace: {{ $namespace }}
+roleRef:
+  name: kafka-topics-controller
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+{{- end }}

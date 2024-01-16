@@ -10,11 +10,11 @@ import static java.util.Optional.ofNullable;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Logger.getLogger;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static net.pincette.jes.util.Configuration.loadDefault;
 import static net.pincette.jes.util.Kafka.adminConfig;
 import static net.pincette.jes.util.Kafka.fromConfig;
+import static net.pincette.operator.util.Util.replyUpdateIfExists;
 import static net.pincette.util.Collections.filterMap;
 import static net.pincette.util.Collections.list;
 import static net.pincette.util.Collections.map;
@@ -43,7 +43,6 @@ import java.util.concurrent.CompletionStage;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 import net.pincette.jes.util.Kafka;
-import net.pincette.operator.util.Status.Condition;
 import org.apache.kafka.clients.admin.Admin;
 import org.apache.kafka.clients.admin.AlterConfigOp;
 import org.apache.kafka.clients.admin.Config;
@@ -69,7 +68,7 @@ public class KafkaTopicReconciler
     return properties(spec).entrySet().stream()
         .map(e -> new ConfigEntry(e.getKey(), e.getValue()))
         .map(c -> new AlterConfigOp(c, SET))
-        .collect(toList());
+        .toList();
   }
 
   private static boolean anyChanged(final KafkaTopicSpec oldSpec, final KafkaTopicSpec newSpec) {
@@ -275,12 +274,12 @@ public class KafkaTopicReconciler
                           timerEventSource.scheduleOnce(resource, 60000);
                           resource.setStatus(status(resource).withMessageLag(messageLag));
 
-                          return patchStatus(resource);
+                          return replyUpdateIfExists(context.getClient(), resource);
                         })
                     .exceptionally(e -> error(resource, e))
                     .toCompletableFuture()
                     .join(),
             e -> error(resource, e))
-        .orElse(null);
+        .orElseGet(UpdateControl::noUpdate);
   }
 }

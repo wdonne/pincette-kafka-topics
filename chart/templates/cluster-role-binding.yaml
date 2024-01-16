@@ -1,0 +1,18 @@
+{{- if not .Values.watchNamespaces }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kafka-topics-controller
+  labels:
+    app.kubernetes.io/component: kafka-topics-controller
+    app.kubernetes.io/name: kafka-topics-controller
+subjects:
+  - kind: ServiceAccount
+    name: kafka-topics-controller
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  name: kafka-topics-controller
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+{{- end }}

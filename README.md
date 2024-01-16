@@ -2,7 +2,7 @@
 
 With this Kubernetes operator you can manage Kafka topics. The `KafkaTopic` custom resource describes a Kafka topic. It will create the topic if it doesn't exist and make sure the properties it supports are not changed in any other way. When it detects such a change it will put back the values in the custom resource. When such a resource is deleted, the Kafka topic will not be deleted. A resource looks like this:
 
-```
+```yaml
 apiVersion: pincette.net/v1
 kind: KafkaTopic
 metadata:
@@ -18,7 +18,7 @@ The field `name` is optional. You can use it when the topic name doesn't comply 
 
 The `status` field may also contain the field `messageLag`. It is updated every minute. The keys in the field are the Kafka consumer groups that consume the topic. The values are objects that contain the message lag for each topic partition if there is any.
 
-```
+```yaml
 apiVersion: pincette.net/v1
 kind: KafkaTopic
 metadata:
@@ -39,23 +39,25 @@ status:
 
 Install the operator as follows:
 
-```
-kubectl apply -f https://github.com/wdonne/pincette-kafka-topics/raw/main/manifests/install.yaml
+```bash
+helm repo add pincette https://pincette.net/charts
+helm repo update
+helm install kafka-topics pincette/kafka-topics --namespace kafka-topics --create-namespace
 ```
 
-You need to provide a `ConfigMap` like this:
+The default chart values expect you to provide a `Secret` in the `kafka-topics` namespace (or the one you have chosen) with the name `config` like this:
 
-```
+```yaml
 apiVersion: v1
-kind: ConfigMap
+kind: Secret
 metadata:
   namespace: kafka-topics
   name: config
-data:
+stringData:
   application.conf: |
     bootstrap.servers = "localhost:9092"
     defaultPartitions = 4
     defaultReplicationFactor = 3    
 ```
 
-The syntax is [Lightbend Config](https://github.com/lightbend/config). You may add other Kafka properties to it. If there would be secrets in those properties, then you should kustomize the `Deployment` resource to mount a secret instead. You could also mount both and use an `include` statement to include the secret in the config, for example. The fields `defaultPartitions` and `defaultReplicationFactor` are optional.
+The syntax is [Lightbend Config](https://github.com/lightbend/config). If your configuration has partly secret information and partly non-secret information, then you can load both a secret and a config map. Then you can include one in the other with a Lightbend include statement. The default command in the container image expects to find the result in `/conf/application.conf`, but you can change this in the values file. The fields `defaultPartitions` and `defaultReplicationFactor` are optional.
