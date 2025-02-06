@@ -9,12 +9,12 @@ import static java.util.Optional.empty;
 import static java.util.Optional.ofNullable;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.logging.Level.SEVERE;
-import static java.util.logging.Logger.getLogger;
 import static java.util.stream.Collectors.toMap;
 import static net.pincette.jes.util.Configuration.loadDefault;
 import static net.pincette.jes.util.Kafka.adminConfig;
 import static net.pincette.jes.util.Kafka.fromConfig;
 import static net.pincette.operator.util.Util.replyUpdateIfExists;
+import static net.pincette.topics.Application.LOGGER;
 import static net.pincette.util.Collections.filterMap;
 import static net.pincette.util.Collections.list;
 import static net.pincette.util.Collections.map;
@@ -40,7 +40,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
-import java.util.logging.Logger;
 import java.util.stream.Stream;
 import net.pincette.jes.util.Kafka;
 import org.apache.kafka.clients.admin.Admin;
@@ -57,7 +56,6 @@ public class KafkaTopicReconciler
     implements Reconciler<KafkaTopic>, EventSourceInitializer<KafkaTopic> {
   private static final String DEFAULT_PARTITIONS = "defaultPartitions";
   private static final String DEFAULT_REPLICATION_FACTOR = "defaultReplicationFactor";
-  private static final Logger LOGGER = getLogger("net.pincette.topics");
   static final String MAX_MESSAGE_BYTES = "max.message.bytes";
   private static final String RETENTION_BYTES = "retention.bytes";
   private static final String RETENTION_MS = "retention.ms";
@@ -217,16 +215,12 @@ public class KafkaTopicReconciler
   }
 
   private static KafkaTopicSpec setProperty(final KafkaTopicSpec spec, final ConfigEntry entry) {
-    switch (entry.name()) {
-      case MAX_MESSAGE_BYTES:
-        return spec.withMaxMessageBytes(intValue(entry));
-      case RETENTION_BYTES:
-        return spec.withRetentionBytes(intValue(entry));
-      case RETENTION_MS:
-        return spec.withRetentionMilliseconds(intValue(entry));
-      default:
-        return spec;
-    }
+    return switch (entry.name()) {
+      case MAX_MESSAGE_BYTES -> spec.withMaxMessageBytes(intValue(entry));
+      case RETENTION_BYTES -> spec.withRetentionBytes(intValue(entry));
+      case RETENTION_MS -> spec.withRetentionMilliseconds(intValue(entry));
+      default -> spec;
+    };
   }
 
   private static KafkaTopicStatus status(final KafkaTopic resource) {

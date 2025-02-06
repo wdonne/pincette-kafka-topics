@@ -7,7 +7,7 @@
   <groupId>net.pincette</groupId>
   <artifactId>pincette-kafka-topics</artifactId>
   <packaging>jar</packaging>
-  <version>1.1</version>
+  <version>1.1.1</version>
   <name>pincette-kafka-topics</name>
   <description>A Kubernetes operator that can manage Kafka topics</description>
   <url>https://github.com/wdonne/pincette-kafka-topics</url>
@@ -52,54 +52,54 @@
     <dependency>
       <groupId>net.pincette</groupId>
       <artifactId>pincette-common</artifactId>
-      <version>2.3.5</version>
+      <version>2.5.0</version>
     </dependency>
     <dependency>
       <groupId>net.pincette</groupId>
       <artifactId>pincette-jes-util</artifactId>
-      <version>3.1.12</version>
+      <version>3.2.5</version>
     </dependency>
     <dependency>
       <groupId>net.pincette</groupId>
       <artifactId>pincette-operator-util</artifactId>
-      <version>1.1</version>
+      <version>1.1.1</version>
     </dependency>
     <dependency>
       <groupId>io.javaoperatorsdk</groupId>
       <artifactId>operator-framework</artifactId>
-      <version>4.6.2</version>
+      <version>4.9.7</version>
     </dependency>
     <dependency>
       <groupId>org.apache.kafka</groupId>
       <artifactId>kafka-clients</artifactId>
-      <version>3.6.1</version>
+      <version>3.9.0</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-jdk14</artifactId>
-      <version>2.0.10</version>
+      <version>2.0.16</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>2.0.10</version>
+      <version>2.0.16</version>
     </dependency>
     <dependency>
       <groupId>io.fabric8</groupId>
       <artifactId>crd-generator-apt</artifactId>
-      <version>6.9.2</version>
+      <version>7.1.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
-      <version>5.10.1</version>
+      <version>5.11.4</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>net.pincette</groupId>
       <artifactId>pincette-operator-testutil</artifactId>
-      <version>1.0.1</version>
+      <version>1.0.2</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -108,13 +108,8 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.12.1</version>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
-        <version>3.6.0</version>
+        <version>3.7.1</version>
         <executions>
           <execution>
             <phase>package</phase>
@@ -137,7 +132,7 @@
       <plugin>
         <groupId>com.google.cloud.tools</groupId>
         <artifactId>jib-maven-plugin</artifactId>
-        <version>3.4.0</version>
+        <version>3.4.4</version>
         <configuration>
           <from>
             <image>
@@ -167,46 +162,10 @@
             <user>1000:1000</user>
             <jvmFlags>
               <jvmFlag>-Dconfig.file=/conf/application.conf</jvmFlag>
+              <entry>-XX:+ExitOnOutOfMemoryError</entry>
             </jvmFlags>
           </container>
         </configuration>
-      </plugin>
-      <plugin>
-        <groupId>pl.project13.maven</groupId>
-        <artifactId>git-commit-id-plugin</artifactId>
-        <version>4.9.10</version>
-        <executions>
-          <execution>
-            <id>get-the-git-infos</id>
-            <goals>
-              <goal>revision</goal>
-            </goals>
-            <phase>initialize</phase>
-          </execution>
-        </executions>
-        <configuration>
-          <generateGitPropertiesFile>true</generateGitPropertiesFile>
-          <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties
-          </generateGitPropertiesFilename>
-          <includeOnlyProperties>
-            <includeOnlyProperty>^git.build.(time|version)$</includeOnlyProperty>
-            <includeOnlyProperty>^git.commit.id.(abbrev|full)$</includeOnlyProperty>
-          </includeOnlyProperties>
-          <commitIdGenerationMode>full</commitIdGenerationMode>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.2.3</version>
-        <configuration>
-          <forkCount>0</forkCount>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-failsafe-plugin</artifactId>
-        <version>3.2.3</version>
       </plugin>
     </plugins>
   </build>

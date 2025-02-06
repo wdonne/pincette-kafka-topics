@@ -17,7 +17,7 @@ spec:
         - name: kafka-topics-controller
           image: "wdonne/pincette-kafka-topics:{{ .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.imagePullPolicy }}
-          resources: {{ toYaml .Values.resources }}
+          resources: {{ toYaml .Values.resources | nindent 12 }}
           {{- if .Values.command }}
           command: {{ toYaml .Values.command | nindent 12 }}
           {{- end }}
